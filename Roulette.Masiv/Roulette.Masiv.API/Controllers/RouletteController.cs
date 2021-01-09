@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Roulette.Masiv.Business.Services;
 using Roulette.Masiv.Common.CustomExceptions;
 using Roulette.Masiv.Entities.DTO;
 using Roulette.Masiv.Entities.Enums;
 using Roulette.Masiv.Entities.Requests;
-using System;
+using Swashbuckle.AspNetCore.Annotations;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Roulette.Masiv.API.Controllers
 {
@@ -22,12 +21,22 @@ namespace Roulette.Masiv.API.Controllers
             _service = service;
         }
 
+        [SwaggerOperation(
+            Summary = "Gets all roulettes",
+            OperationId = "GetAll"
+        )]
+        [SwaggerResponse(200, "List of roulettes", typeof(List<Entities.Persistence.Roulette>))]
         [HttpGet]
         public IActionResult GetAll()
         {
             return Ok(_service.GetAll());
         }
 
+        [SwaggerOperation(
+            Summary = "Create roullete",
+            OperationId = "Create"
+        )]
+        [SwaggerResponse(200, "return Id created", typeof(string))]
         [HttpPost]
         public IActionResult Create()
         {
@@ -35,6 +44,14 @@ namespace Roulette.Masiv.API.Controllers
             return Ok(id);
         }
 
+        [SwaggerOperation(
+            Summary = "Open roullete",
+            OperationId = "Open"
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "return roulette was opened")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Roulette not found")]
+        [SwaggerResponse(StatusCodes.Status406NotAcceptable, "Roulette is already open")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Roulette is definetly closed")]
         [HttpPut("{id}/open")]
         public IActionResult Open(string id)
         {
@@ -49,7 +66,7 @@ namespace Roulette.Masiv.API.Controllers
             }
             catch (RouletteAlreadyOpenedException)
             {
-                return BadRequest($"La ruleta con identificador {id} ya se encuentra abierta");
+                return StatusCode(StatusCodes.Status406NotAcceptable, $"La ruleta con identificador {id} ya se encuentra abierta");
             }
             catch (RouletteIsCloseException)
             {
@@ -57,8 +74,17 @@ namespace Roulette.Masiv.API.Controllers
             }
         }
 
+        [SwaggerOperation(
+            Summary = "Place a bet",
+            OperationId = "Bet"
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "return bet was placed successfully")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Roulette not found")]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid bet")]
+        [SwaggerResponse(StatusCodes.Status402PaymentRequired, "Invalid bet ammount")]
+        [SwaggerResponse(StatusCodes.Status406NotAcceptable, "Roulette is closed")]
         [HttpPut("{id}/bet")]
-        public IActionResult Bet(string id, [FromHeader] string userId, [FromBody] BetRequest request)
+        public IActionResult Bet(string id, [FromHeader, SwaggerParameter("User id", Required = true)] string userId, [FromBody, SwaggerRequestBody("Bet request", Required = true)] BetRequest request)
         {
             try
             {
@@ -74,14 +100,18 @@ namespace Roulette.Masiv.API.Controllers
                 _service.Bet(parameters);
                 return Ok();
             }
+            catch (RouletteNotFoundException)
+            {
+                return NotFound($"La ruleta con identificador {id} no existe");
+            }
             catch (InvalidBetTypeException)
             {
                 string message = "No se ha ingresado una apuesta valida";
                 switch (request.Type)
-                    {
-                        case 1:
+                {
+                    case 1:
                         message = $"{message}, Debe ser un número entre 0 y 36";
-                            break;
+                        break;
                     case 2:
                         message = $"{message}, Debe ser un color: RED o BLACK";
                         break;
@@ -90,21 +120,28 @@ namespace Roulette.Masiv.API.Controllers
             }
             catch (AmmountOutOfRangeException)
             {
-                return BadRequest($"El monto de la apuesta debe estar entre $1 y $10.000");
+                return StatusCode(StatusCodes.Status402PaymentRequired, $"El monto de la apuesta debe estar entre $1 y $10.000");
             }
             catch (RouletteIsCloseException)
             {
-                return BadRequest($"La ruleta con identificador {id} esta cerrada");
+                return StatusCode(StatusCodes.Status406NotAcceptable, $"La ruleta con identificador {id} esta cerrada");
             }
         }
 
+        [SwaggerOperation(
+            Summary = "Close roulette",
+            OperationId = "Close"
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "return bet was placed successfully", typeof(CloseDto))]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Roulette not found")]
+        [SwaggerResponse(StatusCodes.Status406NotAcceptable, "Roulette is closed")]
         [HttpPut("{id}/close")]
         public IActionResult Close(string id)
         {
             try
             {
-                var bets = _service.Close(id);
-                return Ok(bets);
+                var response = _service.Close(id);
+                return Ok(response);
             }
             catch (RouletteNotFoundException)
             {
@@ -112,7 +149,7 @@ namespace Roulette.Masiv.API.Controllers
             }
             catch (RouletteIsCloseException)
             {
-                return BadRequest($"La ruleta con identificador {id} ya se encuentra cerrada");
+                return StatusCode(StatusCodes.Status406NotAcceptable, $"La ruleta con identificador {id} ya se encuentra cerrada");
             }
         }
     }

@@ -1,17 +1,12 @@
 using EasyCaching.Core.Configurations;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using Roulette.Masiv.Business.Services;
 using Roulette.Masiv.Data.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Roulette.Masiv.API
 {
@@ -38,6 +33,13 @@ namespace Roulette.Masiv.API
                 }, "roulettedb");
             });
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Roulette API Docs", Version = "v1" });
+
+                c.EnableAnnotations();
+            });
+
             services.AddScoped<IRouletteService, RouletteService>();
             services.AddScoped<IRouletteRepository, RouletteRepository>();
         }
@@ -53,6 +55,14 @@ namespace Roulette.Masiv.API
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseSwagger();
+
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Roulette API v1");
+                c.RoutePrefix = string.Empty;
+            });
 
             app.UseEndpoints(endpoints =>
             {

@@ -10,6 +10,6 @@ namespace Roulette.Masiv.Business.Services
         string Create();
         void Open(string id);
         void Bet(BetParameters parameters);
-        List<BetDto> Close(string id);
+        CloseDto Close(string id);
     }
 }

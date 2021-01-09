@@ -51,37 +51,48 @@ namespace Roulette.Masiv.Business.Services
             ValidateBetAmmount(parameters.Money);
             ValidateBetType(parameters);
             RouletteEntity roulette = _repository.GetById(parameters.RouletteId);
+            ValidateRouletteExist(roulette);
             ValidateRouletteIsClosed(roulette);
             AddOrUpdateBet(parameters, roulette);
 
             _repository.Save(roulette);
         }
 
-        public List<BetDto> Close(string id)
+        public CloseDto Close(string id)
         {
             RouletteEntity roulette = _repository.GetById(id);
             ValidateRouletteExist(roulette);
             ValidateRouletteIsClosed(roulette);
             var winnerNumber = GetWinnerNumber();
-
-            var bets = roulette.Bets.Select(b => new BetDto
+            var winnerColor = GetWinnerColor(winnerNumber);
+            CloseDto response = new CloseDto
             {
-                MoneyBet = b.Money,
-                UserId = b.UserId,
-                Value = b.Value,
-                Winner = ValidateWinner(b.Value, winnerNumber),
-                Prize = ValidatePrize(b.Value, b.Money, winnerNumber)
-            }).ToList();
-
+                Bets = GetBetsDto(roulette, winnerNumber, winnerColor),
+                WinnerNumber = winnerNumber,
+                WinnerColor = winnerColor
+            };
+        
             roulette.Status = false;
             _repository.Save(roulette);
 
-            return bets;
+            return response;
         }
 
         public List<RouletteEntity> GetAll()
         {
             return _repository.GetAll();
+        }
+
+        private List<BetDto> GetBetsDto(RouletteEntity roulette, int winnerNumber, string winnerColor)
+        {
+            return roulette.Bets.Select(b => new BetDto
+            {
+                MoneyBet = b.Money,
+                UserId = b.UserId,
+                Value = b.Value,
+                Winner = ValidateWinner(b.Value, winnerNumber, winnerColor),
+                Prize = ValidatePrize(b.Value, b.Money, winnerNumber, winnerColor)
+            }).ToList();
         }
 
         private void ValidateRouletteIsDefinitelyClosed(RouletteEntity roulette)
@@ -102,23 +113,21 @@ namespace Roulette.Masiv.Business.Services
                 throw new RouletteNotFoundException();
         }
 
-        private bool ValidateWinner(string valueBet, int winnerNumber)
+        private bool ValidateWinner(string valueBet, int winnerNumber, string winnerColor)
         {
             int value = -1;
             if (!int.TryParse(valueBet, out value))
             {
-                var winnerColor = GetWinnerColor(winnerNumber);
-
                 return winnerColor == valueBet;
             }
 
             return winnerNumber == value;
         }
 
-        private decimal ValidatePrize(string valueBet, decimal moneyBet, int winnerNumber)
+        private decimal ValidatePrize(string valueBet, decimal moneyBet, int winnerNumber, string winnerColor)
         {
             decimal prize = 0;
-            if (ValidateWinner(valueBet, winnerNumber))
+            if (ValidateWinner(valueBet, winnerNumber, winnerColor))
             {
                 prize = CalculatePrize(valueBet, moneyBet);
             }
