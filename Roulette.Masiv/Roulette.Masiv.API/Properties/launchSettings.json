@@ -14,7 +14,11 @@
       "launchBrowser": true,
       "launchUrl": "index.html",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "RedisDBName": "roulettedb",
+        "RedisServerName": "127.0.0.1",
+        "RedisServerPort": "6379",
+        "RouletteTable": "ROULETTE_TABLE"
       }
     },
     "Roulette.Masiv.API": {
@@ -22,7 +26,11 @@
       "launchBrowser": true,
       "launchUrl": "index.html",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "RedisDBName": "roulettedb",
+        "RedisServerName": "127.0.0.1",
+        "RedisServerPort": "6379",
+        "RouletteTable": "ROULETTE_TABLE"
       },
       "applicationUrl": "http://localhost:5000"
     }

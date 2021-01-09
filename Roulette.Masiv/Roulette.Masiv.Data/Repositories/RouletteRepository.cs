@@ -11,7 +11,7 @@ namespace Roulette.Masiv.Data.Repositories
         private readonly IEasyCachingProviderFactory _cachingFactory;
         private IEasyCachingProvider cachingProvider;
 
-        private const string TableKey = "ROULETTE_TABLE";
+        private string TableKey = Environment.GetEnvironmentVariable("RouletteTable");
 
         public RouletteRepository(IEasyCachingProviderFactory cachingFactory)
         {

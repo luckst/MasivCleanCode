@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Roulette.Masiv.Business.Services;
 using Roulette.Masiv.Data.Repositories;
+using System;
 
 namespace Roulette.Masiv.API
 {
@@ -28,9 +29,9 @@ namespace Roulette.Masiv.API
             {
                 option.UseRedis(config =>
                 {
-                    config.DBConfig.Endpoints.Add(new ServerEndPoint("127.0.0.1", 6379));
+                    config.DBConfig.Endpoints.Add(new ServerEndPoint(Environment.GetEnvironmentVariable("RedisServerName"), Convert.ToInt32(Environment.GetEnvironmentVariable("RedisServerPort"))));
                     config.DBConfig.AllowAdmin = true;
-                }, "roulettedb");
+                }, Environment.GetEnvironmentVariable("RedisDBName"));
             });
 
             services.AddSwaggerGen(c =>
