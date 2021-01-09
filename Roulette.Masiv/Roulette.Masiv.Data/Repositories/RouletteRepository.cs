@@ -1,4 +1,5 @@
 ﻿using EasyCaching.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RouletteEntity = Roulette.Masiv.Entities.Persistence.Roulette;
@@ -33,6 +34,11 @@ namespace Roulette.Masiv.Data.Repositories
                 return new List<RouletteEntity>();
             }
             return new List<RouletteEntity>(rouletes.Select(x => x.Value.Value));
+        }
+
+        public void Save(RouletteEntity roulette)
+        {
+            cachingProvider.Set($"{TableKey}{roulette.Id}", roulette, TimeSpan.FromDays(10));
         }
     }
 }

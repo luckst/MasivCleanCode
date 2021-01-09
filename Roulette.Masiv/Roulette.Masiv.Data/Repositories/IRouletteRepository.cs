@@ -7,5 +7,6 @@ namespace Roulette.Masiv.Data.Repositories
     {
         RouletteEntity GetById(string id);
         List<RouletteEntity> GetAll();
+        void Save(RouletteEntity roulette);
     }
 }
